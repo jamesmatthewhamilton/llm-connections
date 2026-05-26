@@ -171,11 +171,12 @@ class OllamaProvider(BaseProvider):
         self._tunnel_port = None
         self._tunnel_config = config.get("ssh_tunnel")
 
+        self._ensured = False
         if self._tunnel_config:
             self._setup_tunnel()
+            self._ensured = True  # tunnel already verified in _setup_tunnel
         else:
             self.base_url = config.get("base_url", "http://localhost:11434")
-            _ensure_local_ollama_running(self.base_url)
 
     def _setup_tunnel(self):
         """Establish SSH tunnel to remote Ollama server.
@@ -212,6 +213,12 @@ class OllamaProvider(BaseProvider):
 
     def _get_client(self):
         """Get an Ollama client pointed at our base_url."""
+        # Deferred connectivity check: only runs when this provider is actually
+        # used (not at startup when every provider is instantiated). Cached so it
+        # prompts at most once per instance and never loops.
+        if not self._ensured:
+            self._ensured = True
+            _ensure_local_ollama_running(self.base_url)
         import ollama
         return ollama.Client(host=self.base_url)
 
