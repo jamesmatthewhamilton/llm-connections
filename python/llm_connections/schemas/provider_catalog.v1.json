@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/jamesmatthewhamilton/llm-connections/blob/main/python/llm_connections/schemas/provider_catalog.v1.json",
+  "title": "ProviderCatalog",
+  "description": "Serialized form of llm_connections.ProviderCatalog.to_dict() at schema_version 1. additionalProperties is permitted so additive (forward-compatible) fields validate against this schema; breaking changes get a new versioned schema file.",
+  "type": "object",
+  "required": ["schema_version", "providers"],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "providers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "provider", "model", "options"],
+        "properties": {
+          "name": {"type": "string"},
+          "provider": {"type": "string"},
+          "model": {"type": "string"},
+          "options": {"type": "object"}
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "llm-connections"
+version = "0.1.0"
+description = "Config-driven, multi-provider LLM client with optional Slurm sessions"
+readme = "README.md"
+requires-python = ">=3.10"
+# Core is intentionally light: stdlib + PyYAML for config. Provider SDKs are
+# extras so importing the library never pulls a heavy dependency tree.
+dependencies = ["pyyaml"]
+
+[project.optional-dependencies]
+litellm = ["litellm", "httpx"]
+ollama = ["ollama"]
+# slurm-manipulator is the sibling submodule (installed by path/editable until
+# published); listed so `[slurm]` documents the dependency for consumers.
+slurm = ["slurm-manipulator"]
+test = ["pytest>=7", "jsonschema>=4", "mypy"]
+
+[tool.setuptools]
+package-dir = {"" = "python"}
+
+[tool.setuptools.packages.find]
+where = ["python"]
+
+[tool.setuptools.package-data]
+# Ship the PEP 561 marker and the published JSON Schema(s) inside the wheel.
+llm_connections = ["py.typed", "schemas/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["python/llm_connections/tests"]
+
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true
+
+[tool.ruff]
+line-length = 100

@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch slurm-manipulator submodule
+        # .gitmodules marks slurm-manipulator `update = none` (it's optional), so
+        # a recursive checkout skips it and leaves an empty dir. Override the
+        # update strategy to check out the pinned commit. The repo is public, so
+        # the default HTTPS fetch needs no auth in CI.
+        run: |
+          git -c submodule.slurm-manipulator.update=checkout \
+            submodule update --init --force slurm-manipulator
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          # Sibling submodule first, then this package with its test extras.
+          pip install -e ./slurm-manipulator
+          pip install -e ".[test]"
+
+      - name: Tests (incl. golden + JSON Schema contract tests)
+        run: pytest -q
+
+      - name: Type-check the provider data contract
+        # Scoped to the typed contract module; widen as more of the package
+        # gains annotations + ships under py.typed.
+        run: mypy python/llm_connections/providers.py
